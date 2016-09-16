@@ -9,9 +9,9 @@ def start(directory):
     # blktrace_dir = '%s/blktrace' % directory
 
     # collectl
-    rawdskfilt = 'cciss/c\d+d\d+ |hd[ab] | sd[a-z]+ |dm-\d+ |xvd[a-z] |fio[a-z]+ | vd[a-z]+ |emcpower[a-z]+ |psv\d+ |nvme[0-9]n[0-9]+p[0-9]+ '
-    common.pdsh(nodes, 'mkdir -p -m0755 -- %s' % collectl_dir)
-    common.pdsh(nodes, 'collectl -s+mYZ -i 1:10 --rawdskfilt "%s" -F0 -f %s' % (rawdskfilt, collectl_dir))
+    # rawdskfilt = 'cciss/c\d+d\d+ |hd[ab] | sd[a-z]+ |dm-\d+ |xvd[a-z] |fio[a-z]+ | vd[a-z]+ |emcpower[a-z]+ |psv\d+ |nvme[0-9]n[0-9]+p[0-9]+ '
+    # common.pdsh(nodes, 'mkdir -p -m0755 -- %s' % collectl_dir)
+    # common.pdsh(nodes, 'collectl -s+mYZ -i 1:10 --rawdskfilt "%s" -F0 -f %s' % (rawdskfilt, collectl_dir))
 
     # perf
     # common.pdsh(nodes), 'mkdir -p -m0755 -- %s' % perf_dir).communicate()
@@ -23,13 +23,20 @@ def start(directory):
     #     common.pdsh(osds, 'cd %s;sudo blktrace -o device%s -d /dev/disk/by-partlabel/osd-device-%s-data'
     #                 % (blktrace_dir, device, device))
 
+    # Touch a file in 'directory' to keep sync_files happy. This was satisfied by the
+    # collectd_dir directory's presence.
+    common.pdsh(nodes, 'mkdir -p -m0755 -- %s && touch %s/keepme' % (directory, directory))
+    # collectd
+    common.pdsh(nodes, 'sudo collectd')
+
 
 def stop(directory=None):
     nodes = settings.getnodes('clients', 'osds', 'mons', 'rgws')
 
-    common.pdsh(nodes, 'pkill -SIGINT -f collectl').communicate()
-    common.pdsh(nodes, 'sudo pkill -SIGINT -f perf_3.6').communicate()
-    common.pdsh(settings.getnodes('osds'), 'sudo pkill -SIGINT -f blktrace').communicate()
+    # common.pdsh(nodes, 'pkill -SIGINT -f collectl').communicate()
+    # common.pdsh(nodes, 'sudo pkill -SIGINT -f perf_3.6').communicate()
+    # common.pdsh(settings.getnodes('osds'), 'sudo pkill -SIGINT -f blktrace').communicate()
+    common.pdsh(nodes, 'sudo pkill collectd').communicate()
     if directory:
         sc = settings.cluster
         common.pdsh(nodes, 'cd %s/perf;sudo chown %s.%s perf.data' % (directory, sc.get('user'), sc.get('user')))
