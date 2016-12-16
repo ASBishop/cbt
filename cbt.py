@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import annotations
 import argparse
 import collections
 import logging
@@ -52,6 +53,7 @@ def main(argv):
     # E_OK
     return_code = 0
 
+    annotations.annotate('CBT Test Start', ctx.config_file)
     try:
         for iteration in range(settings.cluster.get("iterations", 0)):
             benchmarks = benchmarkfactory.get_all(cluster, iteration)
@@ -83,6 +85,7 @@ def main(argv):
                 logger.exception("During %s cleanup", k)
                 return_code = 1  # FAIL
 
+    annotations.annotate('CBT Test End', ctx.config_file)
     return return_code
 
 

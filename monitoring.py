@@ -1,5 +1,7 @@
+import annotations
 import common
 import settings
+import time
 
 
 def start(directory):
@@ -29,9 +31,14 @@ def start(directory):
     # collectd
     common.pdsh(nodes, 'sudo collectd')
 
+    annotations.annotate('CBT Monitor Start', directory)
 
 def stop(directory=None):
     nodes = settings.getnodes('clients', 'osds', 'mons', 'rgws')
+
+    # Kludge: wait a bit for collectd to send its last interval of stats
+    time.sleep(5)
+    annotations.annotate('CBT Monitor Stop', directory)
 
     # common.pdsh(nodes, 'pkill -SIGINT -f collectl').communicate()
     # common.pdsh(nodes, 'sudo pkill -SIGINT -f perf_3.6').communicate()
